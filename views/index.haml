@@ -1,9 +1,101 @@
 !!! 5
 %html
   %head
-    %title Index
-    %link{href: 'global.css', rel: 'stylesheet'}
-  %body
-    %h1 Index Page
-    = text
+    %meta(http-equiv='Content-Type' content='text/html;charset=utf-8')
+    %meta(name='MobileOptimized' content='width')
+    %meta(name='HandheldFriendly' content='true')
+    %meta(name='viewport' content='width=device-width')
 
+    - stylesheets.each do |file|
+      %link(rel='stylesheet' type='text/css' href='#{file[:href]}' media='#{file[:media]}')
+
+    - if noindex
+      %meta(name='robots' content='noindex, nofollow')
+
+    /[if IE 7]
+      %link(rel='stylesheet' type='text/css' href='#{base_url}/css/ie7.css' media='all')
+
+    :javascript
+      var baseUrl = #{base_url.to_json};
+      var uploadDest = #{upload_dest.to_json};
+      var pageFullPath = #{request.path[1..-1].to_json};
+
+    - scripts.each do |script|
+      %script(type='text/javascript' src=script)
+
+    - if mathjax
+      - if mathjax_config.nil?
+        :javascript
+          window.MathJax = {
+            text2jax: {
+              inlineMath: [ ['$','$'], ['\\(','\\)'] ],
+              displayMath: [ ['$$','$$'], ['\\[','\\]'] ],
+              processEscapes: true
+            },
+            TeX: { extensions: ['autoload-all.js'] }
+          };
+      :javascript
+        (function(d,j){
+        j = d.createElement('script');
+        j.src = '//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+        (d.head || d.getElementsByTagName('head')[0]).appendChild(j);
+        }(document));
+
+    %title= page_title
+  %body
+    :javascript
+      Mousetrap.bind(['e'], function( e ) {
+        e.preventDefault();
+        window.location = '/edit' + window.location.pathname; // XXX this seems broken
+        return false;
+      });
+    %div#wiki-wrapper.page
+      %div.ui.fixed.inverted.menu
+        %div.ui.container
+          %a.header.item(href='#{base_url}/')
+            %img.logo(src='#{base_url}/img/#{wiki_logo}')
+            %p(style='padding-left: 5px')= wiki_name
+          %a.item(href='#{base_url}/')
+            %i.home.icon
+            Home
+          %a.item(href='#{base_url}/pages')
+            %i.folder.open.outline.icon
+            All
+          %a.item(href='#{base_url}/fileview')
+            %i.file.outline.icon
+            Files
+          %div.ui.simple.dropdown.item
+            %i.edit.icon
+            Menu
+            %i.dropdown.icon
+              %div.menu
+                - if allow_editing
+                  %a#minibutton-new-page.item(href='#')
+                    %i.add.square.icon
+                      New
+                  - if allow_uploads
+                    %a#minibutton-upload-page.item(href='#')
+                      %i.upload.icon
+                        Upload
+                  - if editable
+                    %a#minibutton-rename-page.item(href='#')
+                      %i.edit.icon
+                      Rename
+                    %a.item(href='#{base_url}/edit/#{URI.encode(request.path[1..-1])}')
+                      %i.write.icon
+                      Edit
+                  %div.divider
+                  - if page_exists
+                    %a.item(href='#{base_url}/history/#{URI.encode(request.path[1..-1])}')
+                      %i.history.icon
+                      Page History
+          %a.item(href='#{base_url}/latest_changes') Lastest Wiki Changes
+          %div.item
+            %div.ui.transparent.inverted.icon.input
+              %form#search-form(action='#{base_url}/search' method='get')
+                %input(type='text' name='q' placeholder='Search...')
+                %i.search.link.icon.button(onclick='submitSearch()')
+      %div#head
+        %h1= page_title
+
+      %div#wiki-content
