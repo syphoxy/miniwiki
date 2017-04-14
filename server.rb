@@ -56,15 +56,21 @@ get '/edit/:path' do
 end
 
 get '/:path' do
-  haml :index, locals: {
+  haml :index,  locals: {
     config: @config,
     page: {
       stylesheets: @stylesheets,
       scripts: @scripts,
       editable: true,
       exists: true,
-      title: params['path'],
-      body: mediawiki('= ' + params['path'] + ' =')
+      title: 'Hello World',
+      body: mediawiki('== Hello World ==', {noedit: true}),
+      format: 'mediawiki',
+      toc: nil,
+      header: {format: nil, body: nil},
+      sidebar: {format: nil, body: nil},
+      footer: {format: nil, body: nil},
+      last_edit: {author: 'John Smith', date: '2017-04-13 22:58'}
     }
   }
 end

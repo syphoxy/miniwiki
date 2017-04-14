@@ -1,4 +1,4 @@
-!!! 5
+!!!
 %html
   %head
     %meta(http-equiv='Content-Type' content='text/html;charset=utf-8')
@@ -42,6 +42,7 @@
         }(document));
 
     %title= page[:title]
+
   %body
     :javascript
       Mousetrap.bind(['e'], function( e ) {
@@ -49,9 +50,9 @@
         window.location = '/edit' + window.location.pathname; // XXX this seems broken
         return false;
       });
-    %div#wiki-wrapper.page
-      %div.ui.fixed.inverted.menu
-        %div.ui.container
+    #wiki-wrapper.page
+      .ui.fixed.inverted.menu
+        .ui.container
           %a.header.item(href='#{config[:base_url]}/')
             %img.logo(src='#{config[:base_url]}/img/#{config[:wiki_logo]}')
             %p(style='padding-left: 5px')= config[:wiki_name]
@@ -64,11 +65,11 @@
           %a.item(href='#{config[:base_url]}/fileview')
             %i.file.outline.icon
             Files
-          %div.ui.simple.dropdown.item
+          .ui.simple.dropdown.item
             %i.edit.icon
             Menu
             %i.dropdown.icon
-              %div.menu
+              .menu
                 - if config[:allow_editing]
                   %a#minibutton-new-page.item(href='#')
                     %i.add.square.icon
@@ -84,18 +85,45 @@
                     %a.item(href='#{config[:base_url]}/edit/#{URI.encode(request.path[1..-1])}')
                       %i.write.icon
                       Edit
-                  %div.divider
+                  .divider
                   - if page[:exists]
                     %a.item(href='#{config[:base_url]}/history/#{URI.encode(request.path[1..-1])}')
                       %i.history.icon
                       Page History
           %a.item(href='#{config[:base_url]}/latest_changes') Lastest Wiki Changes
-          %div.item
-            %div.ui.transparent.inverted.icon.input
+          .item
+            .ui.transparent.inverted.icon.input
               %form#search-form(action='#{config[:base_url]}/search' method='get')
                 %input(type='text' name='q' placeholder='Search...')
                 %i.search.link.icon.button(onclick='submitSearch()')
-      %div#head
+      #head
         %h1= page[:title]
 
-      %div#wiki-content
+      #wiki-content
+        .has-sidebar{:class => "{{#has_header}}has-header{{/has_header}}{{#has_footer}} has-footer{{/has_footer}}{{#has_sidebar}} has-{{bar_side}}bar{{/has_sidebar}}{{#has_toc}} has-toc{{/has_toc}}"}
+          - unless page[:toc].nil?
+            #wiki-toc-main= page[:toc]
+          - unless page[:sidebar].nil? || page[:sidebar][:format].nil? || page[:sidebar][:body].nil?
+            #wiki-sidebar(class='gollum-#{page[:sidebar][:format]}-content')
+              #sidebar-content.markdown-body= page[:sidebar][:content]
+          #wiki-body(class="gollum-#{page[:format]}-content")
+            - unless page[:header].nil? || page[:header][:format].nil? || page[:header][:body].nil?
+              #wiki-header(class="gollum-#{page[:header][:format]}-content")
+                #header-content.markdown-body= page[:header][:content]
+            .markdown-body= page[:body]
+          - unless page[:footer].nil? || page[:footer][:format].nil? || page[:footer][:body].nil?
+            #wiki-footer(class="gollum-#{page[:footer][:format]}-content")
+              #footer-content.markdown-body= page[:footer][:content]
+      #footer
+        %p#last-edit
+          Last edited by
+          = succeed ',' do
+            %b= page[:last_edit][:author]
+          = page[:last_edit][:date]
+        - if config[:allow_editing]
+          %p
+            %a#delete-link(href="#{config[:base_url]}/#{URI.encode(request.path[1..-1])}"){"data-confirm" => "Are you sure you want to delete this page?"}
+              %span Delete this Page
+    %form(action="#{config[:base_url]}/rename/#{URI.encode(request.path[1..-1])}" method="POST" name="rename")
+      %input(name="rename" type="hidden")
+      %input(name="message" type="hidden")
